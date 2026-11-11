@@ -1,0 +1,13 @@
+[Unit]
+Description=Wyss Sync: registro continuo del historial de Syncthing
+After=syncthing.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 -B %h/Data/00_System/wyss-sync/wyss-sync.py --historian
+Restart=on-failure
+RestartSec=10
+Nice=10
+
+[Install]
+WantedBy=default.target

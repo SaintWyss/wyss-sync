@@ -1,0 +1,59 @@
+# Patrones de paquetes PER-PC: NUNCA auto-instalar en la otra máquina.
+# Son drivers/firmware/hardware específico. Una regex por línea (grep -E).
+# Compartido entre ambas PCs (vive en Data sincronizado).
+^nvidia
+nvidia-utils
+nvidia-container
+libnvidia
+^opencl-nvidia
+lib32-opencl-nvidia
+^cuda
+ollama-cuda
+egl-wayland
+libxnvctrl
+^amd-ucode$
+^intel-ucode$
+xf86-video-
+^mesa
+vulkan
+lib32-vulkan
+libvdpau
+lib32-libvdpau
+^linux-cachyos
+-dkms$
+broadcom-wl
+b43-fwcutter
+^firmware
+-firmware$
+# WiFi (desktop usa ethernet, laptop wifi)
+wireless-regdb
+wireless_tools
+wpa_supplicant
+^crda$
+^iw$
+# Software de control de hardware
+corectrl
+openrgb
+liquidctl
+opentrack
+hardinfo
+# Herramientas dev/custom que se manejan a mano por PC
+^rtk$
+^fast$
+^stt$
+^pk_creator$
+^metmask-extractor$
+# Hardware / gaming de UNA sola PC (2026-10-10): no se comparan ni se instalan en la otra.
+^an\-anime\-game\-launcher\-bin$
+^gamemode$
+^howdy$
+^input\-remapper\-git$
+^lib32\-gamemode$
+^openrazer\-daemon$
+^pam\-python\-git$
+^piper$
+^polychromatic$
+^python\-openrazer$
+^qgis$
+^steam$
+^wallpaper\-engine\-kde\-plugin\-new\-fork$

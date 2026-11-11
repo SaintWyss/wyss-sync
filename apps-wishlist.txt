@@ -1,0 +1,34 @@
+# ============================================================
+#  apps-wishlist.txt — Apps que querés en AMBAS PCs
+#  sync-apps instala lo que falte en cada máquina.
+#  Vive en Data (sincronizado) → editás una vez, vale para las dos.
+#
+#  REGLAS:
+#   - Una app por línea (nombre EXACTO de paquete pacman/AUR).
+#   - # = comentario. NO pongas drivers/hardware (van en apps-ignore.txt).
+#   - Esta lista arranca SOLO con las apps que hoy difieren entre
+#     tus 2 PCs (lo accionable). Las apps que ya están en ambas no
+#     hace falta listarlas. Agregá acá lo que quieras espejar.
+#
+#  Estado:    sync-status        Instalar faltantes:   sync-apps
+# ============================================================
+
+# ---- Hoy en Acer, faltan en Desktop ----
+obsidian
+onlyoffice-bin
+
+# ---- Hoy en Desktop, faltan en Acer ----
+spotify
+vesktop                 # cliente Discord (alternativa a discord oficial)
+
+# ---- Agregá abajo lo que quieras en ambas (ejemplos comentados) ----
+krusader
+kompare
+krename
+# discord
+# libreoffice-fresh
+# qbittorrent
+# obs-studio
+# Pedidas para las dos PC (2026-10-10)
+bun
+obs-studio
