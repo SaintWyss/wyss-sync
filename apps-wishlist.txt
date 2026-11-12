@@ -13,11 +13,11 @@
 #  Estado:    sync-status        Instalar faltantes:   sync-apps
 # ============================================================
 
-# ---- Hoy en Acer, faltan en Desktop ----
+# ---- Paquetes de la lista compartida ----
 obsidian
 onlyoffice-bin
 
-# ---- Hoy en Desktop, faltan en Acer ----
+# ---- Más paquetes de la lista compartida ----
 spotify
 vesktop                 # cliente Discord (alternativa a discord oficial)
 

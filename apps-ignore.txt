@@ -25,7 +25,7 @@ broadcom-wl
 b43-fwcutter
 ^firmware
 -firmware$
-# WiFi (desktop usa ethernet, laptop wifi)
+# Herramientas y configuración de conectividad
 wireless-regdb
 wireless_tools
 wpa_supplicant
@@ -43,7 +43,7 @@ hardinfo
 ^stt$
 ^pk_creator$
 ^metmask-extractor$
-# Hardware / gaming de UNA sola PC (2026-10-10): no se comparan ni se instalan en la otra.
+# Paquetes específicos de un equipo: no se comparan ni se instalan automáticamente.
 ^an\-anime\-game\-launcher\-bin$
 ^gamemode$
 ^howdy$

@@ -96,7 +96,7 @@ _FID_RX = re.compile(r"^wyss-[a-z0-9-]{1,60}$")
 
 def check_fid(fid: str) -> str:
     """Un vínculo solo puede crear o quitar carpetas cuyo id empiece con `wyss-`: así una orden mal
-    armada (o remota) jamás toca `home-saintwyss`, `mnt-hdd-data` ni ninguna carpeta propia del usuario."""
+    armada (o remota) jamás toca `home-example`, `data-example` ni ninguna carpeta propia del usuario."""
     if not isinstance(fid, str) or not _FID_RX.match(fid):
         raise ValueError(f"id de vínculo inválido: {fid!r}")
     return fid
