@@ -8,6 +8,13 @@ El panel está construido en **Python 3** y **PyQt6**. El paquete `wyss_sync/` s
 
 La interfaz presenta información de sincronización y operaciones existentes; no reemplaza a Syncthing ni transporta por sí misma los archivos. Las pruebas del repositorio cubren componentes Python y scripts de shell.
 
+## Privacidad y requisitos de seguridad
+
+- La aplicación consulta la configuración local de Syncthing, que puede contener una clave de API. No compartas `config.xml`, copias de seguridad ni salidas de diagnóstico sin revisarlas.
+- `apps-wishlist.txt` y `apps-ignore.txt` están versionados y sus contenidos son visibles si el repositorio es público. La lista de aplicaciones es configuración operativa: revisala antes de publicarla o modificarla.
+- Las direcciones y alias de los equipos se configuran en el entorno local; no los agregues como valores predeterminados al código. El registro de operaciones y los inventarios generados quedan excluidos por `.gitignore`.
+- Antes de usar `sync-apps.sh`, podés ejecutar `bash sync-apps.sh --dry` para ver las aplicaciones faltantes sin instalarlas. Revisá cualquier operación antes de aplicarla.
+
 ## Contenido
 
 - `wyss-sync.py` y `wyss_sync/`: panel gráfico.
