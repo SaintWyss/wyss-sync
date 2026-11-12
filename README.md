@@ -2,6 +2,12 @@
 
 Panel y herramientas locales para supervisar Syncthing, comparar aplicaciones y registrar operaciones entre las PCs del propietario.
 
+## Tecnologías y arquitectura
+
+El panel está construido en **Python 3** y **PyQt6**. El paquete `wyss_sync/` separa la interfaz de `core.py`, que consulta la configuración y la API local de Syncthing y reúne información de estado. Las herramientas de terminal usan **Bash** y **SSH** para operaciones y consultas entre equipos; requieren configuración local previa.
+
+La interfaz presenta información de sincronización y operaciones existentes; no reemplaza a Syncthing ni transporta por sí misma los archivos. Las pruebas del repositorio cubren componentes Python y scripts de shell.
+
 ## Contenido
 
 - `wyss-sync.py` y `wyss_sync/`: panel gráfico.
