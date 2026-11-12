@@ -14,7 +14,7 @@
 #                                registrar una op hecha acá (imprime el id)
 #        sync-ops --check        validar el registro (formato, ids, hecho_en)
 #  Registrar SIEMPRE con --add, nunca editando el TSV a mano: cada PC
-#  numera en su rango (Santiago-PC de 999 para abajo, el resto para
+#  numera en su rango (el equipo configurado de 999 para abajo, el resto para
 #  arriba) y une antes las copias sync-conflict de Syncthing, así dos
 #  sesiones en PCs distintas no chocan nunca.
 #
@@ -140,7 +140,10 @@ elif sub == "add":
         try:
             nums = [int(m.group(1)) for l in filas[1:] if (m := re.fullmatch(r"(\d+)b?", l.split("\t")[0]))]
             # corte fijo en 500; si alguna PC llega ahí, los rangos se cruzan y hay que moverlo
-            if host == "Santiago-PC":
+            descending_host = os.environ.get("SYNC_OPS_DESCENDING_HOST")
+            if not descending_host:
+                sys.exit("configurá SYNC_OPS_DESCENDING_HOST para evitar colisiones entre equipos")
+            if host == descending_host:
                 nuevo = min([n for n in nums if n >= 500], default=1000) - 1
             else:
                 nuevo = max([n for n in nums if n < 500], default=0) + 1

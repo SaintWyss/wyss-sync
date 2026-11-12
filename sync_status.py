@@ -27,7 +27,6 @@ CACHE = HOME / ".cache" / "wyss-sync" / "conflictos.json"
 TTL_HOME, TTL_DATA = 60, 600
 ARCHIVED_DIRS = ("conflicts-resolved", "descartados")
 ARCHIVED_PREFIX = ("state-sync-conflicts",)
-PEERS = {"Santiago-PC": ("saint-acer", "192.168.100.5"), "saint-acer": ("santiago-pc", "192.168.100.18")}
 
 
 # ---------------------------------------------------------------- piezas puras (con pruebas)
@@ -103,6 +102,14 @@ def ssh(hosts, argv: list[str], timeout: float = 8.0) -> str | None:
     return None
 
 
+def configured_peers() -> tuple[str, ...]:
+    """Read peer aliases without publishing machine-specific defaults."""
+    values = (os.environ.get("WYSS_SYNC_PEER", ""), os.environ.get("WYSS_SYNC_PEER_FALLBACK", ""))
+    if any(value and not re.fullmatch(r"[A-Za-z0-9_][A-Za-z0-9_.@-]*", value) for value in values):
+        raise ValueError("Alias de equipo inválido en la configuración")
+    return tuple(value for value in values if value)
+
+
 def conflicts(api, folders: list[dict], deep: bool, now=time.time) -> tuple[dict, dict]:
     """(desglose, antigüedad por carpeta). Home se recorre casi siempre; HDD Data usa caché de 10 min
     salvo que `deep` pida recorrerlo (tarda ~1 minuto en el disco rotacional)."""
@@ -144,8 +151,9 @@ def conflicts(api, folders: list[dict], deep: bool, now=time.time) -> tuple[dict
 
 def gather(deep: bool = False) -> dict:
     host = socket.gethostname()
-    peers = PEERS.get(host, ("santiago-pc", "192.168.100.18"))
-    out = {"host": host, "other_name": "Acer" if host == "Santiago-PC" else "Desktop", "other_online": False,
+    peers = configured_peers()
+    peer = os.environ.get("WYSS_SYNC_PEER", "")
+    out = {"host": host, "other_name": peer or "Otro equipo", "other_online": False,
            "apps": {}, "files": {}, "settings": {}}
 
     # ---- archivos (API de Syncthing)
@@ -186,8 +194,8 @@ def gather(deep: bool = False) -> dict:
     live = ssh(peers, ["pacman", "-Qqe"], timeout=12)
     source = "en vivo"
     if live is None:
-        snap = DIR / f"pkgs-{peers[0] if host == 'Santiago-PC' else 'Santiago-PC'}.txt"
-        theirs_pk = set(snap.read_text().split()) if snap.exists() else set()
+        snap = DIR / f"pkgs-{peer}.txt" if peer else None
+        theirs_pk = set(snap.read_text().split()) if snap and snap.exists() else set()
         source = "snapshot" if theirs_pk else "sin datos"
     else:
         theirs_pk = set(live.split())

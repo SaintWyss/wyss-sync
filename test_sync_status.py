@@ -1,5 +1,6 @@
 """Pruebas de sync_status.py. Correr: python3 -B -m unittest test_sync_status"""
 import json
+import os
 import re
 import tempfile
 import unittest
@@ -58,9 +59,19 @@ class PackagesTests(unittest.TestCase):
         self.assertEqual(len(st.read_patterns(d / "i.txt")), 2)
         self.assertEqual(st.read_names(d / "no-existe"), [])
 
+    def test_peer_aliases_are_optional_and_reject_paths(self):
+        from unittest.mock import patch
+        with patch.dict(os.environ, {}, clear=True):
+            self.assertEqual(st.configured_peers(), ())
+        with patch.dict(os.environ, {"WYSS_SYNC_PEER": "pc-b", "WYSS_SYNC_PEER_FALLBACK": "192.0.2.10"}, clear=True):
+            self.assertEqual(st.configured_peers(), ("pc-b", "192.0.2.10"))
+        with patch.dict(os.environ, {"WYSS_SYNC_PEER": "../../otro"}, clear=True):
+            with self.assertRaises(ValueError):
+                st.configured_peers()
+
 
 class RenderTests(unittest.TestCase):
-    BASE = {"host": "Santiago-PC", "other_name": "saint-acer", "other_online": True,
+    BASE = {"host": "pc-a", "other_name": "pc-b", "other_online": True,
             "apps": {"wishlist_total": 7, "missing": [], "only_here": ["x"], "only_there": [], "source": "en vivo"},
             "files": {"syncthing": True, "conflicts": 2, "conflicts_archived": 3, "conflict_sources": [["Home/.config", 2]],
                       "conflict_age_s": {"Home": 5, "HDD Data": None},

@@ -5,8 +5,14 @@
 set -uo pipefail
 DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
 HOST="$(hostname)"
-if [ "$HOST" = "Santiago-PC" ]; then OTHER="saint-acer"; ALIAS=(saint-acer 192.168.100.5)
-else OTHER="Santiago-PC"; ALIAS=(santiago-pc 192.168.100.18); fi
+OTHER="${WYSS_SYNC_PEER:-}"
+[ -n "$OTHER" ] || { echo "Definí WYSS_SYNC_PEER con el nombre o alias SSH del otro equipo" >&2; exit 1; }
+[[ "$OTHER" =~ ^[A-Za-z0-9_][A-Za-z0-9_.@-]*$ ]] || { echo "Alias de equipo inválido" >&2; exit 1; }
+ALIAS=("$OTHER")
+if [ -n "${WYSS_SYNC_PEER_FALLBACK:-}" ]; then
+  [[ "$WYSS_SYNC_PEER_FALLBACK" =~ ^[A-Za-z0-9_][A-Za-z0-9_.@-]*$ ]] || { echo "Alias alternativo inválido" >&2; exit 1; }
+  ALIAS+=("$WYSS_SYNC_PEER_FALLBACK")
+fi
 MINE="$DIR/pkgs-$HOST.txt"; THEIRS="$DIR/pkgs-$OTHER.txt"
 
 pacman -Qqe | sort > "$MINE.tmp"

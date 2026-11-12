@@ -30,7 +30,7 @@ def routes(connected=True, folder_paused=False, status=None, completion=None):
     status = status or {"state": "idle", "globalBytes": 1000, "needBytes": 0, "needTotalItems": 0}
     return {
         "/rest/system/status": {"myID": ME},
-        "/rest/config/devices": [{"deviceID": ME, "name": "Santiago-PC"}, {"deviceID": OTHER, "name": "saint-acer"}],
+        "/rest/config/devices": [{"deviceID": ME, "name": "pc-a"}, {"deviceID": OTHER, "name": "pc-b"}],
         "/rest/config/folders": [
             {"id": "home", "label": "Home", "path": "/home/u", "paused": folder_paused,
              "devices": [{"deviceID": ME}, {"deviceID": OTHER}]},
@@ -38,14 +38,14 @@ def routes(connected=True, folder_paused=False, status=None, completion=None):
         ],
         "/rest/system/connections": {"connections": {OTHER: {
             "connected": connected, "paused": False,
-            "address": "tcp://192.168.100.5:22000" if connected else ""}}},
+            "address": "tcp://192.0.2.10:22000" if connected else ""}}},
         "/rest/db/status": status,
         "/rest/db/completion": completion or {"completion": 100},
     }
 
 
-LOCAL = {"host": "Santiago-PC", "os": "CachyOS Linux", "chassis": 3, "folders": {"home": "/home/u"}}
-REMOTE = {"host": "saint-acer", "os": "CachyOS Linux", "chassis": 10, "folders": {"home": "/home/otro"}}
+LOCAL = {"host": "pc-a", "os": "CachyOS Linux", "chassis": 3, "folders": {"home": "/home/u"}}
+REMOTE = {"host": "pc-b", "os": "CachyOS Linux", "chassis": 10, "folders": {"home": "/home/otro"}}
 
 
 class FolderStateTests(unittest.TestCase):
@@ -96,7 +96,7 @@ class CollectorTests(unittest.TestCase):
     def test_modelo_completo(self):
         c, probes = self.make(routes())
         m = c.collect()
-        self.assertEqual(probes, ["saint-acer"])  # primero el alias de ssh, que es el nombre del dispositivo
+        self.assertEqual(probes, ["pc-b"])  # primero el alias de ssh, que es el nombre del dispositivo
         self.assertEqual([f["id"] for f in m["folders"]], ["home"])  # la carpeta no compartida no aparece
         f = m["folders"][0]
         self.assertEqual((f["local_path"], f["remote_path"], f["state"]), ("/home/u", "/home/otro", "synced"))
@@ -108,11 +108,11 @@ class CollectorTests(unittest.TestCase):
 
         def remote_probe(host):
             probes.append(host)
-            return REMOTE if host == "192.168.100.5" else None
+            return REMOTE if host == "192.0.2.10" else None
 
         c = core.Collector(FakeApi(routes()), local_probe=lambda: LOCAL, remote_probe=remote_probe)
         m = c.collect()
-        self.assertEqual(probes, ["saint-acer", "192.168.100.5"])
+        self.assertEqual(probes, ["pc-b", "192.0.2.10"])
         self.assertTrue(m["remote"]["ssh"])
 
     def test_sonda_remota_se_cachea(self):
@@ -161,7 +161,7 @@ class ProbeTests(unittest.TestCase):
             seen["cmd"], seen["input"] = cmd, kw["input"]
             return R()
 
-        self.assertEqual(core.probe_remote("192.168.100.5", runner=runner), REMOTE)
+        self.assertEqual(core.probe_remote("192.0.2.10", runner=runner), REMOTE)
         self.assertEqual(seen["cmd"][-2:], ["python3", "-"])
         self.assertIn("BatchMode=yes", seen["cmd"])
         self.assertIn("def probe()", seen["input"])
@@ -237,9 +237,9 @@ class WindowTests(unittest.TestCase):
         folders = [{"id": f"f{i}", "label": f"Carpeta {i}", "type": "sendreceive",
                     "local_path": f"/home/u/c{i}", "remote_path": f"/home/otro/c{i}",
                     "state": state, "percent": pct, "need_items": 0} for i in range(n)]
-        return {"local": {"name": "Santiago-PC", "os": "CachyOS Linux", "kind": "desktop", "online": True},
-                "remote": {"name": "saint-acer", "os": "CachyOS Linux", "kind": "laptop", "online": online,
-                           "address": "192.168.100.5", "ssh": True},
+        return {"local": {"name": "pc-a", "os": "CachyOS Linux", "kind": "desktop", "online": True},
+                "remote": {"name": "pc-b", "os": "CachyOS Linux", "kind": "laptop", "online": online,
+                           "address": "192.0.2.10", "ssh": True},
                 "folders": folders, "fetched_at": 0}
 
     def test_render_crea_una_fila_por_carpeta_y_actualiza_en_sitio(self):
@@ -609,7 +609,7 @@ class CliTests(unittest.TestCase):
             seen["cmd"] = cmd
             return R()
 
-        manage.remote_cli(["saint-acer"], "apply", {"folder": "home", "rel": "a b;rm -rf ~", "action": "ignore"}, runner=runner)
+        manage.remote_cli(["pc-b"], "apply", {"folder": "home", "rel": "a b;rm -rf ~", "action": "ignore"}, runner=runner)
         arg = seen["cmd"][-1]
         self.assertRegex(arg, r"^[A-Za-z0-9_=-]+$")           # nada que un shell pueda interpretar
         self.assertEqual(seen["cmd"][-4:-1], [manage.REMOTE_ENTRY, "--cli", "apply"])
@@ -991,7 +991,7 @@ class PagesTests(unittest.TestCase):
     def ctx(self):
         from wyss_sync.pages import Context
         c = Context(object())
-        c.update({"local": {"name": "Santiago-PC"}, "remote": {"name": "saint-acer", "online": True, "id": "R",
+        c.update({"local": {"name": "pc-a"}, "remote": {"name": "pc-b", "online": True, "id": "R",
                                                                "address": "1.2.3.4"},
                   "folders": [{"id": "f", "label": "Home", "local_path": "/tmp"}]})
         return c
@@ -999,8 +999,8 @@ class PagesTests(unittest.TestCase):
     def test_historial_pinta_filas_y_marca_errores(self):
         from wyss_sync import pages
         p = pages.HistoryPage(self.ctx())
-        rows = [{"ts": "2026-10-10T21:00:05-03:00", "host": "Santiago-PC", "folder": "f", "path": "a/b", "what": "recibido aquí", "error": ""},
-                {"ts": "2026-10-10T21:00:01-03:00", "host": "saint-acer", "folder": "f", "path": "c", "what": "borrado (falló)", "error": "x"}]
+        rows = [{"ts": "2026-10-10T21:00:05-03:00", "host": "pc-a", "folder": "f", "path": "a/b", "what": "recibido aquí", "error": ""},
+                {"ts": "2026-10-10T21:00:01-03:00", "host": "pc-b", "folder": "f", "path": "c", "what": "borrado (falló)", "error": "x"}]
         p._loaded((rows, True))
         self.assertEqual(p.table.topLevelItemCount(), 2)
         self.assertEqual(p.table.topLevelItem(0).text(2), "Home")          # el id se muestra como etiqueta
@@ -1276,7 +1276,7 @@ class ReviewFixTests(unittest.TestCase):
     def test_backup_con_el_nombre_correcto_pero_que_el_panel_no_escribio(self):
         api = IgnoreApi(["a"])
         manage.apply_change(api, "home", "A", "ignore", state_dir=self.tmp, sleep=lambda s: None)
-        forged = self.tmp / "backups" / "home-Santiago-PC-19990101-000000.stignore"
+        forged = self.tmp / "backups" / "home-pc-a-19990101-000000.stignore"
         forged.write_text("/**\n")
         with self.assertRaises(ValueError) as cm:
             manage.restore_backup(api, "home", str(forged), state_dir=self.tmp)
@@ -1303,7 +1303,7 @@ class ReviewFixTests(unittest.TestCase):
     def test_ajustes_backup_falsificado_se_rechaza(self):
         api = CfgApi()
         manage.apply_settings(api, "f", {"paused": True}, state_dir=self.tmp)
-        forged = self.tmp / "backups" / "config-f-Santiago-PC-19990101-000000.json"
+        forged = self.tmp / "backups" / "config-f-pc-a-19990101-000000.json"
         forged.write_text('{"id": "f", "path": "/"}')
         with self.assertRaises(ValueError):
             manage.restore_settings(api, "f", str(forged), state_dir=self.tmp)

@@ -12,6 +12,16 @@ Panel y herramientas locales para supervisar Syncthing, comparar aplicaciones y 
 
 Requiere Python 3, PyQt6 para la interfaz y Syncthing configurado localmente. Los scripts conservan rutas específicas de las máquinas originales; revisalas antes de usarlos en otro entorno.
 
+La comparación entre equipos necesita un alias SSH configurado en cada máquina:
+
+```bash
+export WYSS_SYNC_PEER=otro-equipo
+# Opcional: dirección o alias alternativo del mismo equipo.
+export WYSS_SYNC_PEER_FALLBACK=192.0.2.10
+```
+
+Para agregar operaciones con `sync-ops.sh --add`, definí además `SYNC_OPS_DESCENDING_HOST` con el nombre del equipo que utiliza el rango descendente. Usá el mismo valor en ambos equipos. Sin esa configuración, el alta se rechaza para evitar IDs duplicados. La modificación requiere configurar de nuevo el entorno local antes de usar estas funciones.
+
 ```bash
 # Abrir el panel gráfico
 python3 wyss-sync.py
