@@ -42,4 +42,4 @@ Para ejecutar las pruebas del panel en un entorno sin pantalla:
 QT_QPA_PLATFORM=offscreen python3 -m unittest -v test_wyss_sync
 ```
 
-Este repositorio conserva el código. No incluye credenciales, estado de Syncthing, registros de operaciones, inventarios de paquetes, respaldos ni el historial operativo.
+Este repositorio incluye una lista compartida de aplicaciones deseadas (`apps-wishlist.txt`) y patrones de exclusión (`apps-ignore.txt`). Son configuración versionada, no un inventario completo de los equipos: revisá su contenido antes de publicar cambios. El estado de Syncthing, los registros de operaciones, los inventarios generados y los respaldos se mantienen fuera de los archivos versionados; verificá también el historial antes de compartir una copia.

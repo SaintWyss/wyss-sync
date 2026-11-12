@@ -1319,8 +1319,8 @@ class LinkApi:
     def __init__(self, me="ME", folders=None):
         self.scans = []
         self.me = me
-        self.folders = folders or [{"id": "home-saintwyss", "label": "Home", "path": "/h", "devices": []},
-                                   {"id": "mnt-hdd-data", "label": "HDD Data", "path": "/d", "devices": []}]
+        self.folders = folders or [{"id": "home-example", "label": "Home", "path": "/h", "devices": []},
+                                   {"id": "data-example", "label": "HDD Data", "path": "/d", "devices": []}]
         self.ign = {f["id"]: [] for f in self.folders}
         self.deleted, self.fail_post_folder = [], False
 
@@ -1368,7 +1368,7 @@ class LinkPathTests(unittest.TestCase):
         self.root = Path(tempfile.mkdtemp())
         self.home = str(self.root / "home")
         (self.root / "home" / "Proyectos" / "app").mkdir(parents=True)
-        self.folders = [{"id": "home-saintwyss", "label": "Home", "path": self.home}]
+        self.folders = [{"id": "home-example", "label": "Home", "path": self.home}]
 
     def v(self, p, **kw):
         return links.validate_path(p, self.folders, self.home, must_exist=kw.get("must_exist", True))
@@ -1410,7 +1410,7 @@ class LinkPathTests(unittest.TestCase):
         self.assertEqual(links.expand("/abs", "/home/u"), "/abs")
         self.assertTrue(links.new_id("/home/u/Mi App", "/r/y").startswith("wyss-mi-app-"))
         self.assertEqual(links.new_id("/a", "/b"), links.new_id("/a", "/b"))
-        for bad in ("home-saintwyss", "mnt-hdd-data", "wyss-", "wyss-A", "wyss-../x", "wyss-" + "a" * 70, None):
+        for bad in ("home-example", "data-example", "wyss-", "wyss-A", "wyss-../x", "wyss-" + "a" * 70, None):
             with self.assertRaises(ValueError):
                 links.check_fid(bad)
         self.assertEqual(links.check_fid("wyss-app-0a1b2c"), "wyss-app-0a1b2c")
@@ -1445,11 +1445,11 @@ class LinkFlowTests(unittest.TestCase):
         self.home = Path(tempfile.mkdtemp())
         (self.home / "Proyectos" / "app").mkdir(parents=True)
         (self.home / "Proyectos" / "app" / "a.txt").write_text("hola")
-        self.api = LinkApi(folders=[{"id": "home-saintwyss", "label": "Home", "path": str(self.home), "devices": []},
-                                    {"id": "mnt-hdd-data", "label": "HDD Data", "path": "/d", "devices": []}])
+        self.api = LinkApi(folders=[{"id": "home-example", "label": "Home", "path": str(self.home), "devices": []},
+                                    {"id": "data-example", "label": "HDD Data", "path": "/d", "devices": []}])
         self.local_folders = [{"id": f["id"], "path": f["path"], "label": f["label"]} for f in self.api.folders]
 
-    def remote_info(self, exists=False, files=0, folder="home-saintwyss", rel="Respaldos/app", blockers=None):
+    def remote_info(self, exists=False, files=0, folder="home-example", rel="Respaldos/app", blockers=None):
         return {"path": "/home/u/Respaldos/app", "home": "/home/u", "blockers": blockers or [], "exists": exists,
                 "folder": folder, "rel": rel, "files": files, "bytes": files * 10, "truncated": False}
 
@@ -1461,7 +1461,7 @@ class LinkFlowTests(unittest.TestCase):
         p = self.plan()
         self.assertEqual(p.blockers, [])
         self.assertEqual([(r["folder"], r["rel"]) for r in p.rules],
-                         [("home-saintwyss", "Proyectos/app"), ("home-saintwyss", "Respaldos/app")])
+                         [("home-example", "Proyectos/app"), ("home-example", "Respaldos/app")])
         self.assertFalse(p.y_has_data)
         self.assertTrue(any("se va a crear" in w for w in p.warnings))
         self.assertTrue(p.fid.startswith("wyss-app-"))
@@ -1493,7 +1493,7 @@ class LinkFlowTests(unittest.TestCase):
     def test_apply_side_aplica_en_orden_y_crea_la_carpeta(self):
         dest = self.home / "Respaldos" / "app"
         out = links.apply_side(self.api, fid="wyss-app-1", label="app", path=str(dest), peer="PEER",
-                               rules=[{"folder": "home-saintwyss", "rel": "Respaldos/app"}], create_dir=True,
+                               rules=[{"folder": "home-example", "rel": "Respaldos/app"}], create_dir=True,
                                folders=self.local_folders, home=str(self.home))
         self.assertTrue(out["ok"], out)
         self.assertEqual(out["steps"], ["ignore", "mkdir", "folder"])
@@ -1501,18 +1501,18 @@ class LinkFlowTests(unittest.TestCase):
         new = self.api.folders[-1]
         self.assertEqual((new["id"], new["path"], new["type"]), ("wyss-app-1", str(dest), "sendreceive"))
         self.assertEqual([d["deviceID"] for d in new["devices"]], ["ME", "PEER"])
-        self.assertIn("/Respaldos/app", manage.split_managed(self.api.ign["home-saintwyss"])[0])
+        self.assertIn("/Respaldos/app", manage.split_managed(self.api.ign["home-example"])[0])
 
     def test_si_falla_el_alta_se_deshace_todo_lo_anterior(self):
         dest = self.home / "Respaldos" / "app"
         self.api.fail_post_folder = True
         out = links.apply_side(self.api, fid="wyss-app-1", label="app", path=str(dest), peer="PEER",
-                               rules=[{"folder": "home-saintwyss", "rel": "Respaldos/app"}], create_dir=True,
+                               rules=[{"folder": "home-example", "rel": "Respaldos/app"}], create_dir=True,
                                folders=self.local_folders, home=str(self.home))
         self.assertFalse(out["ok"])
         self.assertEqual(out["undone"], ["mkdir", "ignore"])
         self.assertFalse(dest.exists())                           # la carpeta que se creó, se quitó (vacía)
-        self.assertEqual(manage.split_managed(self.api.ign["home-saintwyss"])[0], [])
+        self.assertEqual(manage.split_managed(self.api.ign["home-example"])[0], [])
         self.assertEqual(len(self.api.folders), 2)
 
     def test_deshacer_nunca_borra_una_carpeta_con_contenido(self):
@@ -1538,7 +1538,7 @@ class LinkFlowTests(unittest.TestCase):
         out = links.drop_link(self.api, p.fid, remote, state_dir=self.tmp)
         self.assertTrue(out["ok"], out)
         self.assertEqual(self.api.deleted, [p.fid])
-        self.assertEqual(manage.split_managed(self.api.ign["home-saintwyss"])[0], [])   # reglas deshechas
+        self.assertEqual(manage.split_managed(self.api.ign["home-example"])[0], [])   # reglas deshechas
         self.assertNotIn(p.fid, links.load_links(self.tmp))
         self.assertTrue((self.home / "Proyectos" / "app" / "a.txt").exists())          # los archivos, intactos
 
@@ -1562,17 +1562,17 @@ class LinkFlowTests(unittest.TestCase):
                                 state_dir=self.tmp, home=str(self.home))
         self.assertEqual((res["ok"], res["stage"]), (False, "remoto"))
         self.assertEqual(len(self.api.folders), 2)
-        self.assertEqual(manage.split_managed(self.api.ign["home-saintwyss"])[0], [])
+        self.assertEqual(manage.split_managed(self.api.ign["home-example"])[0], [])
 
     def test_quitar_solo_acepta_ids_de_vinculo_y_conocidos(self):
-        for bad in ("home-saintwyss", "mnt-hdd-data"):
+        for bad in ("home-example", "data-example"):
             with self.assertRaises(ValueError):
                 links.remove_side(self.api, fid=bad, rules=[])
         with self.assertRaises(ValueError):
             links.drop_link(self.api, "wyss-no-existe", lambda s, d: None, state_dir=self.tmp)
         self.assertEqual(self.api.deleted, [])
         out = []
-        rc = manage.cli(["link-remove", manage.b64({"fid": "mnt-hdd-data", "rules": []})], api=self.api, out=out.append)
+        rc = manage.cli(["link-remove", manage.b64({"fid": "data-example", "rules": []})], api=self.api, out=out.append)
         self.assertNotEqual(rc, 0)                                # la CLI remota tampoco puede borrarla
         self.assertFalse(json.loads(out[0])["ok"])
         self.assertEqual(self.api.deleted, [])
@@ -1776,8 +1776,8 @@ class SecondReviewTests(unittest.TestCase):
         self.tmp = Path(tempfile.mkdtemp())
         self.home = Path(tempfile.mkdtemp())
         (self.home / "Proyectos" / "app").mkdir(parents=True)
-        self.folders_cfg = [{"id": "home-saintwyss", "label": "Home", "path": str(self.home), "devices": []},
-                            {"id": "mnt-hdd-data", "label": "HDD Data", "path": "/d", "devices": []}]
+        self.folders_cfg = [{"id": "home-example", "label": "Home", "path": str(self.home), "devices": []},
+                            {"id": "data-example", "label": "HDD Data", "path": "/d", "devices": []}]
         self.lf = [{"id": f["id"], "path": f["path"], "label": f["label"]} for f in self.folders_cfg]
 
     def api(self, cls=LinkApi, **kw):
@@ -1785,7 +1785,7 @@ class SecondReviewTests(unittest.TestCase):
 
     def plan(self):
         info = {"path": "/home/u/Respaldos/app", "home": "/home/u", "blockers": [], "exists": False,
-                "folder": "home-saintwyss", "rel": "Respaldos/app", "files": 0, "bytes": 0, "truncated": False}
+                "folder": "home-example", "rel": "Respaldos/app", "files": 0, "bytes": 0, "truncated": False}
         return links.build_plan(str(self.home / "Proyectos" / "app"), "~/Respaldos/app", self.lf, str(self.home), info)
 
     # --- 1. purga a través de un enlace
@@ -1823,24 +1823,24 @@ class SecondReviewTests(unittest.TestCase):
         api = self.api(StaleIgnoreApi, ignored=False)
         dest = self.home / "Respaldos" / "app"
         out = links.apply_side(api, fid="wyss-app-1", label="app", path=str(dest), peer="P",
-                               rules=[{"folder": "home-saintwyss", "rel": "Respaldos/app"}], create_dir=True,
+                               rules=[{"folder": "home-example", "rel": "Respaldos/app"}], create_dir=True,
                                folders=self.lf, home=str(self.home), verify_tries=2, sleep=lambda s: None)
         self.assertFalse(out["ok"])
         self.assertIn("confirmar", out["error"])
         self.assertEqual(len(api.folders), 2)                                # no se agregó la carpeta
-        self.assertEqual(manage.split_managed(api.ign["home-saintwyss"])[0], [])   # regla deshecha
+        self.assertEqual(manage.split_managed(api.ign["home-example"])[0], [])   # regla deshecha
         self.assertFalse(dest.exists())
 
     # --- 7. el rollback no toca lo que ya existía
     def test_el_rollback_no_quita_una_regla_que_ya_existia(self):
         api = self.api()
-        api.ign["home-saintwyss"] = [manage.MARK_BEGIN, "/Respaldos/app", manage.MARK_END]
+        api.ign["home-example"] = [manage.MARK_BEGIN, "/Respaldos/app", manage.MARK_END]
         api.fail_post_folder = True
         out = links.apply_side(api, fid="wyss-app-1", label="app", path=str(self.home / "Respaldos" / "app"),
-                               peer="P", rules=[{"folder": "home-saintwyss", "rel": "Respaldos/app"}],
+                               peer="P", rules=[{"folder": "home-example", "rel": "Respaldos/app"}],
                                create_dir=True, folders=self.lf, home=str(self.home))
         self.assertFalse(out["ok"])
-        self.assertIn("/Respaldos/app", manage.split_managed(api.ign["home-saintwyss"])[0])   # la previa sigue
+        self.assertIn("/Respaldos/app", manage.split_managed(api.ign["home-example"])[0])   # la previa sigue
 
     # --- 4. quitar: el resultado de cada regla cuenta, y el registro no se olvida si quedó algo
     def _created(self, api):
@@ -1905,7 +1905,7 @@ class SecondReviewTests(unittest.TestCase):
 
     def test_un_id_forjado_no_pasa_por_create_link(self):
         p = self.plan()
-        p.fid = "home-saintwyss"
+        p.fid = "home-example"
         with self.assertRaises(ValueError):
             links.create_link(self.api(), p, self.lf, lambda s, d: None, "P", state_dir=self.tmp)
 
@@ -1927,12 +1927,12 @@ class SecondReviewTests(unittest.TestCase):
 class VigilanteTests(unittest.TestCase):
     def setUp(self):
         self.home = Path(tempfile.mkdtemp())
-        self.api = LinkApi(folders=[{"id": "home-saintwyss", "label": "Home", "path": str(self.home), "devices": []}])
-        self.lf = [{"id": "home-saintwyss", "path": str(self.home), "label": "Home"}]
+        self.api = LinkApi(folders=[{"id": "home-example", "label": "Home", "path": str(self.home), "devices": []}])
+        self.lf = [{"id": "home-example", "path": str(self.home), "label": "Home"}]
 
     def test_el_vinculo_reescanea_seguido_y_al_crearse(self):
         out = links.apply_side(self.api, fid="wyss-app-1", label="app", path=str(self.home / "Respaldos" / "app"),
-                               peer="P", rules=[{"folder": "home-saintwyss", "rel": "Respaldos/app"}],
+                               peer="P", rules=[{"folder": "home-example", "rel": "Respaldos/app"}],
                                create_dir=True, folders=self.lf, home=str(self.home), sleep=lambda s: None)
         self.assertTrue(out["ok"], out)
         self.assertEqual(self.api.folders[-1]["rescanIntervalS"], links.LINK_RESCAN_S)   # no 86400
@@ -1941,9 +1941,9 @@ class VigilanteTests(unittest.TestCase):
 
     def test_rescan_solo_acepta_ids_de_vinculo(self):
         with self.assertRaises(ValueError):
-            links.rescan_link(self.api, "home-saintwyss", lambda s, d: None)
+            links.rescan_link(self.api, "home-example", lambda s, d: None)
         r = links.rescan_link(self.api, "wyss-app-1", lambda s, d: {"ok": True, "result": {"ok": True}})
         self.assertEqual(r, {"local": True, "remote": True})
         out = []
-        rc = manage.cli(["link-scan", manage.b64({"fid": "mnt-hdd-data"})], api=self.api, out=out.append)
+        rc = manage.cli(["link-scan", manage.b64({"fid": "data-example"})], api=self.api, out=out.append)
         self.assertNotEqual(rc, 0)
